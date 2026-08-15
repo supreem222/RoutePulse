@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoutePulse - Unified Transit & Route Network for Nepal</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Leaflet GIS Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- QR Code Scanner Engine -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased custom-scrollbar">
+
+    <!-- Header & Navigation Bar -->
+    <nav class="sticky top-0 z-50 glass border-b border-slate-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                
+                <!-- Logo & Brand -->
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('search')">
+                    <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
+                        <i data-lucide="route" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <span class="text-xl font-black tracking-tight text-slate-900">Route<span class="text-blue-600">Pulse</span></span>
+                        <span class="ml-2 text-xs font-semibold px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full border border-blue-200">Nepal Unified Transit</span>
+                    </div>
+                </div>
+
+                <!-- Core Navigation Tabs -->
+                <div class="hidden md:flex space-x-1">
+                    <button onclick="switchTab('search')" id="tab-search" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium text-blue-600 bg-blue-50 transition-all flex items-center space-x-2">
+                        <i data-lucide="search" class="w-4 h-4"></i>
+                        <span>Find Routes</span>
+                    </button>
+                    <button onclick="switchTab('tracking')" id="tab-tracking" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all flex items-center space-x-2">
+                        <i data-lucide="map-pin" class="w-4 h-4"></i>
+                        <span>Live GPS Tracking</span>
+                    </button>
+                    <button onclick="switchTab('operator')" id="tab-operator" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all flex items-center space-x-2">
+                        <i data-lucide="bus" class="w-4 h-4"></i>
+                        <span>List Vehicle</span>
+                    </button>
+                    <button onclick="switchTab('impact')" id="tab-impact" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium text-amber-600 hover:bg-amber-50 border border-amber-200 transition-all flex items-center space-x-2">
+                        <i data-lucide="trophy" class="w-4 h-4"></i>
+                        <span>Hackathon Impact</span>
+                    </button>
+                </div>
+
+                <!-- Scanner & Trust Badges -->
+                <div class="flex items-center space-x-3">
+                    <button onclick="openModal('qr-modal')" class="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-all" title="Scan Ticket / Destination QR">
+                        <i data-lucide="qr-code" class="w-6 h-6"></i>
+                    </button>
+                    <div class="h-6 w-px bg-slate-200"></div>
+                    <span class="text-xs font-semibold px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-200 flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Verified Network
+                    </span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- Trust & Security Banner -->
+        <section class="mb-6 grid grid-cols-2 md:grid-cols-4 gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-xs text-slate-600">
+            <div class="flex items-center space-x-2">
+                <i data-lucide="shield-check" class="w-5 h-5 text-emerald-600"></i>
+                <div>
+                    <strong class="block text-slate-900">100% Verified Fleet</strong>
+                    <span>Government Registered</span>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <i data-lucide="wallet" class="w-5 h-5 text-blue-600"></i>
+                <div>
+                    <strong class="block text-slate-900">Secure Payments</strong>
+                    <span>eSewa, Khalti & COD</span>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <i data-lucide="life-buoy" class="w-5 h-5 text-amber-600"></i>
+                <div>
+                    <strong class="block text-slate-900">24/7 Support Hotline</strong>
+                    <span>Dedicated Helpline</span>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <i data-lucide="award" class="w-5 h-5 text-purple-600"></i>
+                <div>
+                    <strong class="block text-slate-900">Top Rated Services</strong>
+                    <span>Verified Ratings</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 1: Customer Search & Route Booking -->
+        <section id="view-search" class="view-panel space-y-6">
+            <!-- Search Header Box -->
+            <div class="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 rounded-2xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+                <div class="relative z-10 max-w-3xl">
+                    <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Travel across All Cities, Districts & Villages.</h1>
+                    <p class="mt-2 text-slate-300 text-sm sm:text-base">Book Deluxe Buses, HiAce Micros, and 4x4 Mountain Jeeps to any location in Nepal.</p>
+                </div>
+
+                <!-- Search Form -->
+                <form id="search-form" onsubmit="handleSearch(event)" class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-white/10 p-3 rounded-xl backdrop-blur-md border border-white/10">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-200 mb-1">Departure Location</label>
+                        <div class="relative">
+                            <i data-lucide="map-pin" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
+                            <select id="origin-select" class="w-full bg-white text-slate-900 pl-9 pr-3 py-2 rounded-lg text-sm font-medium border-none outline-none focus:ring-2 focus:ring-blue-500">
+                                <!-- Populated dynamically by JS -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-200 mb-1">Destination</label>
+                        <div class="relative">
+                            <i data-lucide="navigation" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
+                            <select id="destination-select" class="w-full bg-white text-slate-900 pl-9 pr-3 py-2 rounded-lg text-sm font-medium border-none outline-none focus:ring-2 focus:ring-blue-500">
+                                <!-- Populated dynamically by JS -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-200 mb-1">Travel Date</label>
+                        <div class="relative">
+                            <i data-lucide="calendar" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
+                            <input type="date" id="travel-date" class="w-full bg-white text-slate-900 pl-9 pr-3 py-2 rounded-lg text-sm font-medium border-none outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+
+                    <div class="flex items-end">
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg text-sm transition-all shadow-lg flex items-center justify-center space-x-2">
+                            <i data-lucide="search" class="w-4 h-4"></i>
+                            <span>Search Route</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Filter Options & Vehicle Results -->
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <!-- Filters Sidebar -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 h-fit space-y-5">
+                    <h3 class="font-bold text-slate-900 flex items-center justify-between text-sm">
+                        <span>Filter Vehicles</span>
+                        <i data-lucide="sliders-horizontal" class="w-4 h-4 text-slate-400"></i>
+                    </h3>
+
+                    <div>
+                        <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Vehicle Type</label>
+                        <div class="mt-2 space-y-2 text-sm">
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" checked class="rounded text-blue-600 focus:ring-blue-500">
+                                <span>Deluxe AC Bus</span>
+                            </label>
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" checked class="rounded text-blue-600 focus:ring-blue-500">
+                                <span>VIP Sofa Seater</span>
+                            </label>
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" checked class="rounded text-blue-600 focus:ring-blue-500">
+                                <span>HiAce Microbus</span>
+                            </label>
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" checked class="rounded text-blue-600 focus:ring-blue-500">
+                                <span>4x4 Offroad Jeep</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <hr class="border-slate-100">
+
+                    <div>
+                        <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Amenities</label>
+                        <div class="mt-2 space-y-2 text-sm">
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" class="rounded text-blue-600">
+                                <span>Air Suspension</span>
+                            </label>
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" class="rounded text-blue-600">
+                                <span>Wi-Fi & Charging</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vehicles Listing Container -->
+                <div class="lg:col-span-3 space-y-4" id="vehicle-list">
+                    <!-- Dynamic Vehicle Cards Rendered Here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 2: Real Live Map Tracking -->
+        <section id="view-tracking" class="view-panel hidden space-y-4">
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-md-center gap-4">
+                <div>
+                    <span class="text-xs font-bold text-blue-600 uppercase tracking-wide">Real-Time GPS Engine</span>
+                    <h2 class="text-xl font-bold text-slate-900" id="active-tracking-title">Select a Vehicle to Track</h2>
+                    <p class="text-xs text-slate-500" id="active-tracking-subtitle">Monitored via OpenStreetMap & Telematics</p>
+                </div>
+                <div class="flex items-center space-x-4 text-xs font-medium">
+                    <div class="bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg text-emerald-700">
+                        <span class="block text-slate-400 text-[10px]">CURRENT SPEED</span>
+                        <span class="text-sm font-bold" id="tracking-speed">52 km/h</span>
+                    </div>
+                    <div class="bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-lg text-blue-700">
+                        <span class="block text-slate-400 text-[10px]">STATUS</span>
+                        <span class="text-sm font-bold" id="tracking-status">On Schedule</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Leaflet Map Container -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[550px]">
+                <div class="lg:col-span-2 bg-white p-2 rounded-xl border border-slate-200 shadow-sm">
+                    <div id="map" class="h-full w-full rounded-lg"></div>
+                </div>
+                <!-- Timeline and Wait Times -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between overflow-y-auto custom-scrollbar">
+                    <div>
+                        <h3 class="font-bold text-slate-900 mb-4 flex items-center justify-between">
+                            <span>Route Timeline & Wait Times</span>
+                            <i data-lucide="clock" class="w-4 h-4 text-slate-400"></i>
+                        </h3>
+                        <div class="space-y-4 text-sm relative border-l-2 border-slate-200 pl-4 ml-2" id="station-timeline">
+                            <!-- Populated dynamically by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 3: Bus & Vehicle Listing (Operator Portal) -->
+        <section id="view-operator" class="view-panel hidden max-w-3xl mx-auto space-y-6">
+            <div class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm">
+                <div class="border-b border-slate-100 pb-4 mb-6">
+                    <h2 class="text-2xl font-bold text-slate-900">List Your Vehicle on RoutePulse</h2>
+                    <p class="text-sm text-slate-500">Digitize your bus, microbus, or jeep route across Nepal.</p>
+                </div>
+
+                <form onsubmit="handleVehicleListing(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Vehicle Plate Number</label>
+                            <input type="text" placeholder="e.g., Ba 5 Kha 2041" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Vehicle Category</label>
+                            <select id="operator-category" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                <option>Super Deluxe Bus (35 Seats)</option>
+                                <option>VIP Sofa Seater (28 Seats)</option>
+                                <option>HiAce Microbus (14 Seats)</option>
+                                <option>4x4 Scorpio/Bolero Jeep (8 Seats)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Departure Station</label>
+                            <select id="operator-origin" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                <!-- Populated dynamically -->
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Destination Station</label>
+                            <select id="operator-destination" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                <!-- Populated dynamically -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Fare Per Seat (NPR)</label>
+                            <input type="number" placeholder="1200" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Departure Time</label>
+                            <input type="time" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Total Capacity</label>
+                            <input type="number" placeholder="32" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3 rounded-lg text-sm shadow-md transition-all">
+                        Publish Vehicle & Route
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- VIEW 4: Problem-Solution Hackathon Report -->
+        <section id="view-impact" class="view-panel hidden space-y-8">
+            <div class="text-center max-w-3xl mx-auto">
+                <span class="text-xs font-bold text-amber-600 uppercase tracking-widest bg-amber-50 px-3 py-1 rounded-full border border-amber-200">Hackathon Pitch & Vision</span>
+                <h2 class="text-3xl font-extrabold text-slate-900 mt-2">Why RoutePulse Transforms Transit in Nepal</h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Problem Statement -->
+                <div class="bg-red-50/60 border border-red-200 rounded-2xl p-6 space-y-4">
+                    <div class="flex items-center space-x-3 text-red-700">
+                        <i data-lucide="x-circle" class="w-6 h-6"></i>
+                        <h3 class="font-bold text-lg">Problems Before RoutePulse</h3>
+                    </div>
+                    <ul class="space-y-3 text-sm text-slate-700">
+                        <li><strong>Uncertain Wait Times:</strong> Passengers wait for hours without knowing when local vehicles arrive.</li>
+                        <li><strong>Manual Seat Booking:</strong> Double-booking of seats and price inflation at local counters.</li>
+                        <li><strong>Rural Isolation:</strong> Villages and remote districts are excluded from online booking systems.</li>
+                    </ul>
+                </div>
+
+                <!-- Solution Matrix -->
+                <div class="bg-emerald-50/60 border border-emerald-200 rounded-2xl p-6 space-y-4">
+                    <div class="flex items-center space-x-3 text-emerald-700">
+                        <i data-lucide="check-circle-2" class="w-6 h-6"></i>
+                        <h3 class="font-bold text-lg">Solutions by RoutePulse</h3>
+                    </div>
+                    <ul class="space-y-3 text-sm text-slate-700">
+                        <li><strong>Live GPS Telematics:</strong> Tracks vehicles on OpenStreetMap with precise station ETAs.</li>
+                        <li><strong>Universal Network:</strong> Integrates major highways and rural village Jeep routes into one engine.</li>
+                        <li><strong>Flexible Booking & Payments:</strong> Instant seat reservation supporting Digital Wallets and Cash.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal 1: Booking & Seat Matrix -->
+    <div id="booking-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-xl w-full p-6 space-y-5 shadow-2xl relative">
+            <button onclick="closeModal('booking-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+
+            <div>
+                <span class="text-xs font-bold text-blue-600 uppercase">Interactive Seat Selection</span>
+                <h3 class="text-xl font-bold text-slate-900" id="modal-bus-name">Vehicle Name</h3>
+                <p class="text-xs text-slate-500">Pick your seat to proceed with reservation</p>
+            </div>
+
+            <div class="bg-slate-100 p-4 rounded-xl border border-slate-200">
+                <div class="grid grid-cols-4 gap-3 max-w-xs mx-auto text-center" id="seat-grid">
+                    <!-- Dynamic Seats -->
+                </div>
+            </div>
+
+            <form onsubmit="confirmBooking(event)" class="space-y-4">
+                <div class="grid grid-cols-2 gap-3">
+                    <input type="text" required placeholder="Passenger Name" class="px-3 py-2 border border-slate-300 rounded-lg text-sm outline-none">
+                    <input type="tel" required placeholder="Mobile Number" class="px-3 py-2 border border-slate-300 rounded-lg text-sm outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Payment Options</label>
+                    <div class="grid grid-cols-3 gap-2 text-xs">
+                        <label class="border p-2 rounded text-center cursor-pointer hover:bg-slate-50 border-blue-500 bg-blue-50">
+                            <input type="radio" name="pay" checked class="hidden"> Digital Wallet (eSewa/Khalti)
+                        </label>
+                        <label class="border p-2 rounded text-center cursor-pointer hover:bg-slate-50">
+                            <input type="radio" name="pay" class="hidden"> QR Scan & Pay
+                        </label>
+                        <label class="border p-2 rounded text-center cursor-pointer hover:bg-slate-50">
+                            <input type="radio" name="pay" class="hidden"> Cash (COD)
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center pt-2 border-t border-slate-100">
+                    <div>
+                        <span class="text-xs text-slate-500 block">Total Ticket Fare</span>
+                        <span class="text-lg font-bold text-slate-900" id="modal-fare">NPR 0</span>
+                    </div>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-xl text-sm transition-all">
+                        Confirm Seat Booking
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 2: QR Scanner -->
+    <div id="qr-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl relative text-center">
+            <button onclick="closeModal('qr-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <h3 class="text-lg font-bold text-slate-900">Scan Destination or Ticket QR</h3>
+            <div id="reader" class="w-full h-64 bg-slate-100 rounded-lg overflow-hidden border border-slate-200"></div>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script src="app.js"></script>
+</body>
+</html>
